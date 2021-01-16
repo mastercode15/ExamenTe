@@ -232,5 +232,5 @@ message: crypto.AES.decrypt(messageData.val().message, this.encryptKey).toString
 imageMessage: crypto.AES.encrypt(this.message, this.encryptKey).toString()
 imageMessage: crypto.AES.decrypt(messageData.val().imageMessage, this.encryptKey).toString(crypto.enc.Utf8)
 ```
-
-
+## Link YouTube:
+https://youtu.be/ZEpvAvT67AE
