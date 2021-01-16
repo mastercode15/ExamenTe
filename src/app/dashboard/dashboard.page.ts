@@ -1,7 +1,10 @@
 // dashboard.page.ts
 import { Component, OnInit } from '@angular/core';
-import { NavController } from '@ionic/angular';
+import { NavController, ActionSheetController } from '@ionic/angular';
 import { AuthenticateService } from '../services/authentication.service';
+import { FirebaseService } from '../services/firebase.service'
+
+
 
 @Component({
   selector: 'app-dashboard',
@@ -10,11 +13,19 @@ import { AuthenticateService } from '../services/authentication.service';
 })
 export class DashboardPage implements OnInit {
 
+  userID: string;
   userEmail: string;
+  message: string;
+  chats: any = [];
+  tmpImage: any = undefined ;
+
+  imageId = Math.floor( Math.random() * 500 );
+  
 
   constructor(
     private navCtrl: NavController,
-    private authService: AuthenticateService
+    private authService: AuthenticateService,
+    private firebaseServ: FirebaseService,
   ) { }
 
   ngOnInit() {
@@ -22,6 +33,7 @@ export class DashboardPage implements OnInit {
     this.authService.userDetails().subscribe(res => {
       console.log('res', res);
       if (res !== null) {
+        this.userID = res.uid;
         this.userEmail = res.email;
       } else {
         this.navCtrl.navigateBack('');
@@ -29,8 +41,15 @@ export class DashboardPage implements OnInit {
     }, err => {
       console.log('err', err);
     })
-
+    this.firebaseServ.getMessage().on('value', (messageSnap) => {
+      this.chats = [];
+      messageSnap.forEach((messageData) => {
+        console.log('messageData', messageData.val());
+        this.chats.push({ ...messageData.val() });
+      })
+    });
   }
+
 
   logout() {
     this.authService.logoutUser()
@@ -42,4 +61,24 @@ export class DashboardPage implements OnInit {
         console.log(error);
       })
   }
+
+  async sendMessage() {
+    let messageToSend = {};
+
+        messageToSend = {
+            uid: this.userID,
+            email: this.userEmail,
+            message: this.message
+        };
+    
+    try {
+        await this.firebaseServ.sendMessage(messageToSend);
+        this.message = '';
+    } catch (e) {
+        console.log('error', e);
+    }
+}
+
+
+
 }

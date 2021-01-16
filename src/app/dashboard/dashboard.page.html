@@ -1,28 +1,32 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>Dashboard</ion-title>
+  <ion-toolbar color='success'>
+      <ion-title>
+          Chat
+      </ion-title>
   </ion-toolbar>
 </ion-header>
-
-<ion-content class="ion-padding">
-
-  <ion-grid>
-    <ion-row>
-      <ion-col text-center>
-        Welcome to Dashboard!
-      </ion-col>
-    </ion-row>
-    <ion-row>
-      <ion-col text-center>
-        Your Registered EmailID : {{userEmail}}
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-
-
+<ion-content>
+  <ion-card *ngFor='let chat of chats'>
+      <ion-card-header>
+          {{ chat.email }} dice:
+      </ion-card-header>
+      <ion-card-content>
+          {{ chat.message }}
+      </ion-card-content>
+  </ion-card>
 </ion-content>
-<ion-footer (click)="logout()">
-  <ion-toolbar color="secondary">
-    <ion-title>Log out</ion-title>
+<ion-footer>
+  <ion-toolbar>
+      <ion-input placeholder='Enter text' [(ngModel)]='message'></ion-input>
+      <ion-buttons slot='end'>
+          Send
+          <ion-button (click)='sendMessage()'>
+              <ion-icon name='send-outline'></ion-icon>
+      </ion-buttons>
   </ion-toolbar>
+  <ion-footer (click)="logout()">
+    <ion-toolbar color="secondary">
+      <ion-title>Log out</ion-title>
+    </ion-toolbar>
+  </ion-footer>
 </ion-footer>
