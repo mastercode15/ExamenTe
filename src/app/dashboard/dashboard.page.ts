@@ -3,7 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { NavController, ActionSheetController } from '@ionic/angular';
 import { AuthenticateService } from '../services/authentication.service';
 import { FirebaseService } from '../services/firebase.service'
-
+import firebase from 'firebase';
+import { Camera, CameraOptions } from '@ionic-native/camera/ngx'
 
 
 @Component({
@@ -26,6 +27,8 @@ export class DashboardPage implements OnInit {
     private navCtrl: NavController,
     private authService: AuthenticateService,
     private firebaseServ: FirebaseService,
+    private actionSheetController: ActionSheetController,
+    private camera: Camera
   ) { }
 
   ngOnInit() {
@@ -64,13 +67,20 @@ export class DashboardPage implements OnInit {
 
   async sendMessage() {
     let messageToSend = {};
-
+    if (this.tmpImage !== undefined) {
+        messageToSend = {
+            uid: this.userID,
+            email: this.userEmail,
+            imageMessage: this.message
+        };
+        this.tmpImage = undefined;
+    } else {
         messageToSend = {
             uid: this.userID,
             email: this.userEmail,
             message: this.message
         };
-    
+    }
     try {
         await this.firebaseServ.sendMessage(messageToSend);
         this.message = '';
@@ -79,6 +89,64 @@ export class DashboardPage implements OnInit {
     }
 }
 
+  takePhoto(sourceType) {
+    try {
+      const options: CameraOptions = {
+        quality: 50,
+        targetHeight: 600,
+        targetWidth: 600,
+        destinationType: this.camera.DestinationType.DATA_URL,
+        encodingType: this.camera.EncodingType.JPEG,
+        mediaType: this.camera.MediaType.PICTURE,
+        correctOrientation: true,
+        sourceType
+      };
+
+
+      this.camera.getPicture(options)
+        .then(async (imageData) => {
+          console.log('Data de la imagen --------->', imageData);
+          this.tmpImage = 'data:image/jpeg;base64,' + imageData;
+          const putPictures = firebase.storage().ref('imagesMessage/' + this.imageId + '.jpeg');
+          putPictures.putString(this.tmpImage, 'data_url').then((snapshot) => {
+            console.log('snapshot', snapshot.ref);
+          });
+          const getPicture = firebase.storage().ref('imagesMessage/' + this.imageId + '.jpeg').getDownloadURL();
+          getPicture.then((url) => {
+            this.message = url;
+          });
+        })
+        .catch((e) => {
+          console.log(e);
+          this.tmpImage = undefined;
+        });
+    } catch (e) {
+      console.log(e);
+      this.tmpImage = undefined;
+    }
+  }
+
+  async presentActionSheetCamera() {
+    const actionSheet = await this.actionSheetController.create({
+      buttons: [
+        {
+          text: 'Cámara',
+          handler: () => {
+            this.takePhoto(this.camera.PictureSourceType.CAMERA);
+          }
+        }, {
+          text: 'Ver imágenes guardadas',
+          handler: () => {
+            this.takePhoto(this.camera.PictureSourceType.PHOTOLIBRARY);
+          }
+        }, {
+          text: 'Cancelar',
+          role: 'cancel'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
 
 
 }

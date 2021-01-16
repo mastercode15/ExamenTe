@@ -12,6 +12,7 @@
       </ion-card-header>
       <ion-card-content>
           {{ chat.message }}
+          <img src='{{ chat.imageMessage }}' *ngIf='chat.imageMessage'>
       </ion-card-content>
   </ion-card>
 </ion-content>
@@ -22,6 +23,10 @@
           Send
           <ion-button (click)='sendMessage()'>
               <ion-icon name='send-outline'></ion-icon>
+          </ion-button>
+          <ion-button (click)='presentActionSheetCamera()'>
+            <ion-icon name='image-outline'></ion-icon>
+        </ion-button>
       </ion-buttons>
   </ion-toolbar>
   <ion-footer (click)="logout()">
