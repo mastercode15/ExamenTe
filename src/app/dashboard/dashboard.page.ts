@@ -5,6 +5,7 @@ import { AuthenticateService } from '../services/authentication.service';
 import { FirebaseService } from '../services/firebase.service'
 import firebase from 'firebase';
 import { Camera, CameraOptions } from '@ionic-native/camera/ngx'
+import * as crypto from 'crypto-js';
 
 
 @Component({
@@ -18,10 +19,11 @@ export class DashboardPage implements OnInit {
   userEmail: string;
   message: string;
   chats: any = [];
-  tmpImage: any = undefined ;
+  tmpImage: any = undefined;
+  encryptKey: string = "*/*-$%^@!@#";
 
-  imageId = Math.floor( Math.random() * 500 );
-  
+  imageId = Math.floor(Math.random() * 500);
+
 
   constructor(
     private navCtrl: NavController,
@@ -48,7 +50,19 @@ export class DashboardPage implements OnInit {
       this.chats = [];
       messageSnap.forEach((messageData) => {
         console.log('messageData', messageData.val());
-        this.chats.push({ ...messageData.val() });
+        if (messageData.val().imageMessage) {
+          this.chats.push({
+            email: messageData.val().email,
+            imageMessage: crypto.AES.decrypt(messageData.val().imageMessage, this.encryptKey).toString(crypto.enc.Utf8),
+            uid: messageData.val().uid,
+          });
+        } else {
+          this.chats.push({
+            email: messageData.val().email,
+            message: crypto.AES.decrypt(messageData.val().message, this.encryptKey).toString(crypto.enc.Utf8),
+            uid: messageData.val().uid,
+          });
+        }
       })
     });
   }
@@ -68,26 +82,26 @@ export class DashboardPage implements OnInit {
   async sendMessage() {
     let messageToSend = {};
     if (this.tmpImage !== undefined) {
-        messageToSend = {
-            uid: this.userID,
-            email: this.userEmail,
-            imageMessage: this.message
-        };
-        this.tmpImage = undefined;
+      messageToSend = {
+        uid: this.userID,
+        email: this.userEmail,
+        imageMessage: crypto.AES.encrypt(this.message, this.encryptKey).toString()
+      };
+      this.tmpImage = undefined;
     } else {
-        messageToSend = {
-            uid: this.userID,
-            email: this.userEmail,
-            message: this.message
-        };
+      messageToSend = {
+        uid: this.userID,
+        email: this.userEmail,
+        message: crypto.AES.encrypt(this.message, this.encryptKey).toString()
+      };
     }
     try {
-        await this.firebaseServ.sendMessage(messageToSend);
-        this.message = '';
+      await this.firebaseServ.sendMessage(messageToSend);
+      this.message = '';
     } catch (e) {
-        console.log('error', e);
+      console.log('error', e);
     }
-}
+  }
 
   takePhoto(sourceType) {
     try {
